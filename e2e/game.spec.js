@@ -166,3 +166,37 @@ test('criterion 20: footer shows the build stamp', async ({ page }) => {
   await expect(page.getByTestId('commit')).toHaveText(/^[0-9a-f]{7,40}$|^dev$/);
   game.assertNoErrors();
 });
+
+test('no query string (the path every visitor takes): fresh seed per visit and a real AI pause', async ({ page }) => {
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(String(e)));
+  const layouts = [];
+  let elapsed = 0;
+  for (let visit = 0; visit < 2; visit++) {
+    await page.goto('./');
+    await expect(page.getByTestId('start-screen')).toBeVisible();
+    await startGame(page, 'easy');
+    // Randomise uses the game's seeded rng, so an identical own-fleet layout on
+    // two visits means the seed was not fresh (e.g. Number(null) === 0).
+    layouts.push(await page.locator('[data-testid="fleet-board"] button[aria-label$=", ship"]')
+      .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')).join('|')));
+    // Time from the player's shot to the computer's reply appearing in the log.
+    elapsed = await page.evaluate(() => new Promise((resolve) => {
+      const t0 = performance.now();
+      const obs = new MutationObserver(() => {
+        if (document.querySelectorAll('[data-testid="log-entry"]').length >= 2) {
+          obs.disconnect();
+          resolve(performance.now() - t0);
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+      document.querySelector('[data-testid="target"] button[aria-label$=", unknown"]').click();
+    }));
+    expect(elapsed, 'AI must pause before firing when ?delay is absent').toBeGreaterThan(300);
+    await waitForPlayerTurn(page);
+  }
+  expect(layouts[0].length).toBeGreaterThan(0);
+  expect(layouts[0]).not.toBe(layouts[1]);
+  expect(errors, 'console errors').toEqual([]);
+});

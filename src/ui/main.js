@@ -14,10 +14,15 @@ import { renderGameOver } from './gameOver.js';
 
 const params = new URLSearchParams(location.search);
 // ?seed=N replays an exact game; ?delay=ms shortens the pause before the computer fires.
-const seedParam = Number(params.get('seed'));
-const seed = Number.isInteger(seedParam) && seedParam >= 0 ? seedParam : randomSeed();
-const delayParam = Number(params.get('delay'));
-const AI_DELAY = Number.isFinite(delayParam) && delayParam >= 0 ? delayParam : 600;
+/** Parse a non-negative numeric query parameter; absent or malformed → fallback. */
+function numericParam(name, valid, fallback) {
+  const raw = params.get(name);
+  if (raw === null || raw.trim() === '') return fallback();
+  const n = Number(raw);
+  return valid(n) && n >= 0 ? n : fallback();
+}
+const seed = numericParam('seed', Number.isInteger, randomSeed);
+const AI_DELAY = numericParam('delay', Number.isFinite, () => 600);
 
 const game = createGame({ seed });
 const root = document.getElementById('app');
