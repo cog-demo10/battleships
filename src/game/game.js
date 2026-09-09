@@ -42,11 +42,20 @@ import { createAi, LEVELS } from '../ai/index.js';
  *  | { type: 'CHANGE_DIFFICULTY' }} Action
  */
 
+/** Recursively freeze plain objects/arrays so snapshot consumers cannot mutate game state. */
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  Object.freeze(value);
+  for (const k of Object.keys(value)) deepFreeze(value[k]);
+  return value;
+}
+
 /**
  * @param {{ seed: number, size?: number, fleet?: { name: string, length: number }[], level?: Level }} options
  *   `level` skips the selecting phase (used by tests and replays).
  */
-export function createGame({ seed, size = DEFAULT_SIZE, fleet = STANDARD_FLEET, level }) {
+export function createGame({ seed, size = DEFAULT_SIZE, fleet: fleetInput = STANDARD_FLEET, level }) {
+  const fleet = deepFreeze(fleetInput.map((s) => ({ name: s.name, length: s.length })));
   let rng = makeRng(seed);
   /** @type {Phase} */ let phase = 'selecting';
   /** @type {Turn} */ let turn = null;
@@ -212,7 +221,7 @@ export function createGame({ seed, size = DEFAULT_SIZE, fleet = STANDARD_FLEET, 
   function snapshot() {
     const shots = log.filter((e) => e.by === 'player');
     const hits = shots.filter((e) => e.kind !== 'miss').length;
-    return Object.freeze({
+    return deepFreeze({
       phase,
       turn,
       level: currentLevel,

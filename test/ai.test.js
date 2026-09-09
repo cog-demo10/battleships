@@ -69,6 +69,32 @@ describe('memory', () => {
     for (const s of shots) assert.ok(['E6', 'E10'].includes(s), s);
   });
 
+  test('collinear touching ships: whichever sinks first, the record is clean after both sink', () => {
+    // Cruiser E4-E6 and Destroyer E7-E8 in one row, touching. Both orders of
+    // sinking are exercised, including the genuinely ambiguous case where the
+    // sinking shot lands mid-run (E7 with E5, E6, E8 already hit).
+    const orders = [
+      // Destroyer first, sinking shot at the end of the run.
+      [['E5', 'hit'], ['E6', 'hit'], ['E7', 'hit'], ['E8', { kind: 'sunk', size: 2 }], ['E4', { kind: 'sunk', size: 3 }]],
+      // Destroyer first, sinking shot mid-run (ambiguous with size-only sink reports).
+      [['E5', 'hit'], ['E6', 'hit'], ['E8', 'hit'], ['E7', { kind: 'sunk', size: 2 }], ['E4', { kind: 'sunk', size: 3 }]],
+      // Cruiser first, sinking shot at the far end.
+      [['E7', 'hit'], ['E6', 'hit'], ['E5', 'hit'], ['E4', { kind: 'sunk', size: 3 }], ['E8', { kind: 'sunk', size: 2 }]],
+      // Cruiser first, sinking shot mid-run.
+      [['E7', 'hit'], ['E4', 'hit'], ['E6', 'hit'], ['E5', { kind: 'sunk', size: 3 }], ['E8', { kind: 'sunk', size: 2 }]],
+    ];
+    for (const order of orders) {
+      let m = createMemory(10, [3, 2]);
+      for (const [label, result] of order) {
+        m = observe(m, fromLabel(label), typeof result === 'string' ? { kind: result } : result);
+      }
+      assert.deepEqual(m.remainingLengths, [], order.map((o) => o[0]).join(','));
+      assert.deepEqual(unresolvedHits(m), [], order.map((o) => o[0]).join(','));
+      for (const l of ['E4', 'E5', 'E6', 'E7', 'E8']) assert.equal(m.cells[toIndex(fromLabel(l))], 'sunk', `${l} in ${order.map((o) => o[0])}`);
+      assert.equal(m.target, null);
+    }
+  });
+
   test('a hit off the target line is kept unresolved but does not corrupt the axis', () => {
     const m = withResults(createMemory(10, FLEET), [['D4', 'hit'], ['D5', 'hit'], ['G8', 'hit']]);
     assert.equal(m.target.axis, 'horizontal');

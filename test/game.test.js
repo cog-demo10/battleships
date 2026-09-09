@@ -235,6 +235,23 @@ describe('resets', () => {
   });
 });
 
+describe('snapshot immutability', () => {
+  test('nested snapshot structures are frozen and the constructor fleet is copied', () => {
+    const fleet = [{ name: 'Boat', length: 2 }];
+    const game = createGame({ seed: 1, level: 'easy', fleet, size: 4 });
+    fleet[0].length = 4;
+    fleet.push({ name: 'Extra', length: 3 });
+    const s = game.snapshot();
+    assert.deepEqual(s.fleet, [{ name: 'Boat', length: 2 }]);
+    assert.throws(() => { s.playerBoard.ships.push({}); }, TypeError);
+    assert.throws(() => { s.log.push({}); }, TypeError);
+    assert.throws(() => { s.enemy.cells[0] = 'hit'; }, TypeError);
+    assert.throws(() => { s.fleet[0].length = 9; }, TypeError);
+    game.dispatch({ type: 'RANDOMISE' });
+    assert.equal(game.snapshot().playerBoard.ships.length, 1);
+  });
+});
+
 describe('determinism', () => {
   test('criterion 15: seed replay reproduces the enemy fleet and every AI move', () => {
     const run = () => {

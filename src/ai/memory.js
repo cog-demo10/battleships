@@ -131,7 +131,23 @@ function sunkRun(m, at, size) {
     for (let i = 0; i < cells.length; i++) if (cells[i] === 'hit') leftovers.push(fromIndex(i, m.size));
     if (leftovers.every((h) => coverable(m, h, cells, lengths))) return run;
   }
-  return candidates[0] || [at];
+  if (candidates.length) return candidates[0];
+  // The contiguous hit run is shorter than the ship: an earlier sink was
+  // attributed to some of this ship's cells. Re-read the wreck as any span of
+  // `size` hit-or-sunk cells through `at`, preferring the one with most hits.
+  let best = [at];
+  let bestHits = 0;
+  for (const axis of ['horizontal', 'vertical']) {
+    const step = axis === 'horizontal' ? { row: 0, col: 1 } : { row: 1, col: 0 };
+    for (let offset = 0; offset < size; offset++) {
+      const start = { row: at.row - step.row * offset, col: at.col - step.col * offset };
+      const span = shipCells(start, axis, size);
+      if (!span.every((c) => inBounds(c.row, c.col, m.size) && ['hit', 'sunk'].includes(known(m, c)))) continue;
+      const hits = span.filter((c) => known(m, c) === 'hit').length;
+      if (hits > bestHits) { best = span; bestHits = hits; }
+    }
+  }
+  return best;
 }
 
 /** @param {Memory} m @param {Coord} at @param {number} size @returns {Coord[][]} */
@@ -240,6 +256,11 @@ export function observe(m, coord, result) {
   const ri = remainingLengths.indexOf(result.size);
   if (ri >= 0) remainingLengths.splice(ri, 1);
   const next = { ...m, cells, remainingLengths, target: null };
+  // A leftover hit that no remaining ship could still occupy is part of a wreck
+  // whose sink was mis-attributed; stop treating it as a lead.
+  for (const h of unresolvedHits(next)) {
+    if (!coverable(next, h, cells, remainingLengths)) cells[toIndex(h, m.size)] = 'sunk';
+  }
   // Any hits left over belong to another ship: keep hunting them.
   const leftovers = unresolvedHits(next);
   if (leftovers.length > 0) {
