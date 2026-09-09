@@ -230,6 +230,11 @@ export function createGame({ seed, size = DEFAULT_SIZE, fleet: fleetInput = STAN
       fleet,
       playerBoard,
       enemy: opponentView(enemyBoard),
+      // The one legitimate crossing of the view boundary: enemy ships still afloat,
+      // present only once the game is finished.
+      revealedFleet: phase === 'finished'
+        ? remainingShips(enemyBoard).map(({ name, length, cells }) => ({ name, length, cells }))
+        : undefined,
       enemyRemaining: remainingShips(enemyBoard).length,
       playerRemaining: remainingShips(playerBoard).length,
       placement: {

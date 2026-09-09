@@ -41,7 +41,7 @@ test.describe('full games', () => {
         if (e.kind === 'miss') expect(state).toBe('miss');
         else expect(['hit', 'sunk']).toContain(state);
       }
-      const known = Object.values(board).filter((s) => s !== 'unknown').length;
+      const known = Object.values(board).filter((s) => s !== 'unknown' && !s.startsWith('enemy ')).length;
       expect(known).toBe(playerShots.length);
       // AI fires exactly once per player shot (unless the player's shot ended the game).
       const aiShots = log.filter((e) => e.by === 'ai').length;
@@ -159,6 +159,35 @@ test('criterion 16: target-board DOM before the first shot is byte-identical acr
   }
   expect(html[0]).toBe(html[1]);
   expect(html[0]).not.toMatch(/ship|occupant/);
+});
+
+test('criterion 11b: at game over the target board reveals every unsunk enemy ship in place', async ({ page }) => {
+  // Scan-order fire on hard: the computer wins with ships still afloat, so there is something to reveal.
+  const game = await openGame(page, { seed: 5 });
+  await startGame(page, 'hard');
+  expect(Object.values(await readTargetBoard(page)).some((s) => s.startsWith('enemy '))).toBe(false);
+  await playToEnd(page);
+  await expect(page.getByTestId('result')).toHaveText('You lose');
+
+  const remaining = Number((await page.getByTestId('remaining').textContent()).match(/Enemy ships left: (\d+)/)[1]);
+  expect(remaining).toBeGreaterThan(0);
+
+  const after = await readTargetBoard(page);
+  const revealed = Object.entries(after).filter(([, s]) => s.startsWith('enemy '));
+  const hit = Object.values(after).filter((s) => s === 'hit' || s === 'sunk').length;
+  // Revealed (unhit) cells + every hit cell account for the whole 17-cell fleet.
+  expect(revealed.length + hit).toBe(17);
+  // Ships revealed are exactly the ones still afloat.
+  const names = new Set(revealed.map(([, s]) => s));
+  expect(names.size).toBe(remaining);
+  await expect(page.locator('[data-testid="target"] .cell.revealed').first()).toBeVisible();
+
+  // Play again: no trace of the revealed fleet.
+  await page.getByTestId('play-again').click();
+  await page.getByTestId('randomise').click();
+  await page.getByTestId('start').click();
+  expect(Object.values(await readTargetBoard(page)).every((s) => s === 'unknown')).toBe(true);
+  game.assertNoErrors();
 });
 
 test('criterion 20: footer shows the build stamp', async ({ page }) => {

@@ -64,6 +64,7 @@ function paint() {
     children.push(h('div', { class: 'boards' }, [
       renderTargetBoard({
         view: snap.enemy,
+        revealed: snap.revealedFleet,
         enabled: snap.phase === 'playing' && snap.turn === 'player',
         onSelect: (coord) => game.dispatch({ type: 'FIRE', coord }),
       }),
