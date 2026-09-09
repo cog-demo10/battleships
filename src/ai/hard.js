@@ -4,7 +4,7 @@
 // Falls back to line extension, then hunting, if the record is inconsistent.
 
 import { fromIndex, inBounds, shipCells, toIndex } from '../engine/coords.js';
-import { targetCandidates, unknownCells, unresolvedHits } from './memory.js';
+import { extensionCandidates, targetCandidates, unknownCells, unresolvedHits } from './memory.js';
 import { huntCells } from './medium.js';
 
 const HIT_WEIGHT = 50;
@@ -14,10 +14,10 @@ const HIT_WEIGHT = 50;
  * @param {import('./memory.js').Memory} m
  * @returns {number[]} score per cell index (0 for known cells)
  */
-export function density(m) {
+export function density(m, requireHits = true) {
   const { size, cells, remainingLengths } = m;
   const scores = new Array(size * size).fill(0);
-  const hits = unresolvedHits(m);
+  const hits = requireHits ? unresolvedHits(m) : [];
   const hitSet = new Set(hits.map((h) => toIndex(h, size)));
   for (const length of remainingLengths) {
     for (const orientation of ['horizontal', 'vertical']) {
@@ -47,20 +47,28 @@ export function density(m) {
   return scores;
 }
 
+function maxCells(scores, size) {
+  let best = 0;
+  const out = [];
+  for (let i = 0; i < scores.length; i++) {
+    if (scores[i] > best) { best = scores[i]; out.length = 0; }
+    if (scores[i] === best && best > 0) out.push(fromIndex(i, size));
+  }
+  return out;
+}
+
 /** @type {import('./index.js').Strategy} */
 export const hard = {
   level: 'hard',
   chooseShot(memory, rng) {
-    const scores = density(memory);
-    let best = 0;
-    const bestCells = [];
-    for (let i = 0; i < scores.length; i++) {
-      if (scores[i] > best) { best = scores[i]; bestCells.length = 0; }
-      if (scores[i] === best && best > 0) bestCells.push(fromIndex(i, memory.size));
+    const pick = (list) => list[Math.floor(rng() * list.length)];
+    const best = maxCells(density(memory), memory.size);
+    if (best.length > 0) return pick(best);
+    // Record inconsistent (mis-attributed sink): extend lines from unresolved hits,
+    // then hunt by density ignoring the unexplained hits.
+    for (const candidates of [targetCandidates(memory), extensionCandidates(memory), maxCells(density(memory, false), memory.size)]) {
+      if (candidates.length > 0) return pick(candidates);
     }
-    if (bestCells.length > 0) return bestCells[Math.floor(rng() * bestCells.length)];
-    const candidates = targetCandidates(memory);
-    if (candidates.length > 0) return candidates[Math.floor(rng() * candidates.length)];
     const hunt = huntCells(memory);
     if (hunt.length > 0) return hunt[Math.floor(rng() * hunt.length)];
     const unknown = unknownCells(memory);

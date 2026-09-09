@@ -2,7 +2,7 @@
 // game reports for each shot (miss | hit | sunk + size); it never sees a Board.
 // Imports from the engine are restricted to coords.js (see test/boundaries.test.js).
 
-import { fromIndex, inBounds, neighbours, toIndex } from '../engine/coords.js';
+import { fromIndex, inBounds, neighbours, shipCells, toIndex } from '../engine/coords.js';
 
 /** @typedef {import('../engine/coords.js').Coord} Coord */
 /** @typedef {'unknown'|'miss'|'hit'|'sunk'} Known */
@@ -91,16 +91,55 @@ export function targetCandidates(m) {
 }
 
 /**
+ * True if some remaining ship could still lie over `hit` without crossing a
+ * miss or sunk cell. Used to reject sink attributions that would strand a hit.
+ * @param {Memory} m @param {Coord} hit @param {Known[]} cells @param {number[]} lengths
+ */
+function coverable(m, hit, cells, lengths) {
+  for (const length of new Set(lengths)) {
+    for (const axis of ['horizontal', 'vertical']) {
+      for (let offset = 0; offset < length; offset++) {
+        const start = axis === 'horizontal'
+          ? { row: hit.row, col: hit.col - offset }
+          : { row: hit.row - offset, col: hit.col };
+        const placement = shipCells(start, axis, length);
+        const last = placement[length - 1];
+        if (!inBounds(start.row, start.col, m.size) || !inBounds(last.row, last.col, m.size)) continue;
+        if (placement.every((c) => { const k = cells[toIndex(c, m.size)]; return k === 'unknown' || k === 'hit'; })) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Work out which hit cells a reported sink of `size` accounts for: a straight
- * run of `size` hit cells through `at`. Prefers the current target axis. Falls
- * back to marking just `at` if no consistent run exists.
+ * run of `size` hit cells through `at`. Candidate runs are ranked (exact-length
+ * runs first, then the current target axis); the first that leaves every other
+ * hit still coverable by a remaining ship wins. Falls back to marking just `at`.
  * @param {Memory} m @param {Coord} at @param {number} size @returns {Coord[]}
  */
 function sunkRun(m, at, size) {
+  const candidates = sunkRunCandidates(m, at, size);
+  const lengths = m.remainingLengths.slice();
+  const ri = lengths.indexOf(size);
+  if (ri >= 0) lengths.splice(ri, 1);
+  for (const run of candidates) {
+    const cells = m.cells.slice();
+    for (const c of run) cells[toIndex(c, m.size)] = 'sunk';
+    const leftovers = [];
+    for (let i = 0; i < cells.length; i++) if (cells[i] === 'hit') leftovers.push(fromIndex(i, m.size));
+    if (leftovers.every((h) => coverable(m, h, cells, lengths))) return run;
+  }
+  return candidates[0] || [at];
+}
+
+/** @param {Memory} m @param {Coord} at @param {number} size @returns {Coord[][]} */
+function sunkRunCandidates(m, at, size) {
   const axes = [];
   if (m.target && m.target.axis) axes.push(m.target.axis);
   for (const a of ['horizontal', 'vertical']) if (!axes.includes(a)) axes.push(a);
-  for (const axis of axes) {
+  const lines = axes.map((axis) => {
     const line = [];
     const step = axis === 'horizontal' ? { row: 0, col: 1 } : { row: 1, col: 0 };
     // Walk backwards then forwards over contiguous hits.
@@ -114,23 +153,55 @@ function sunkRun(m, at, size) {
       line.push(c);
       c = { row: c.row + step.row, col: c.col + step.col };
     }
-    if (line.length < size) continue;
-    if (line.length === size) return line;
-    // Longer run than the ship: choose the window of `size` containing `at`,
-    // preferring the one that overlaps the current target's hits most.
+    return line;
+  });
+  // A run of exactly the reported size is the strongest evidence, whichever axis.
+  const out = lines.filter((l) => l.length === size);
+  for (const line of lines) {
+    if (line.length <= size) continue;
+    // Longer run than the ship: every span of `size` containing `at`, the ones
+    // overlapping the current target's hits most first.
     const idx = line.findIndex((x) => x.row === at.row && x.col === at.col);
-    let best = null;
-    let bestScore = -1;
+    const spans = [];
     for (let s = Math.max(0, idx - size + 1); s <= Math.min(idx, line.length - size); s++) {
-      const window = line.slice(s, s + size);
+      const span = line.slice(s, s + size);
       const score = m.target
-        ? window.filter((w) => m.target.hits.some((h) => h.row === w.row && h.col === w.col)).length
+        ? span.filter((w) => m.target.hits.some((h) => h.row === w.row && h.col === w.col)).length
         : 0;
-      if (score > bestScore) { best = window; bestScore = score; }
+      spans.push({ span, score });
     }
-    return best;
+    spans.sort((a, b) => b.score - a.score);
+    out.push(...spans.map((w) => w.span));
   }
-  return [at];
+  return out;
+}
+
+/**
+ * Line-extension fallback used when the record has become inconsistent (a sink
+ * was attributed to the wrong cells, which can happen with touching ships and
+ * size-only sink reports): unknown cells next to any unresolved hit, preferring
+ * cells that extend a straight run of hits.
+ * @param {Memory} m @returns {Coord[]}
+ */
+export function extensionCandidates(m) {
+  const scores = new Map();
+  for (const h of unresolvedHits(m)) {
+    for (const n of neighbours(h, m.size)) {
+      if (known(m, n) !== 'unknown') continue;
+      // The cell on the far side of h from n; if it is a hit, n extends a line.
+      const far = { row: 2 * h.row - n.row, col: 2 * h.col - n.col };
+      const extends_ = inBounds(far.row, far.col, m.size) && known(m, far) === 'hit';
+      const key = toIndex(n, m.size);
+      scores.set(key, (scores.get(key) || 0) + (extends_ ? 10 : 1));
+    }
+  }
+  let best = 0;
+  const out = [];
+  for (const [key, score] of scores) {
+    if (score > best) { best = score; out.length = 0; }
+    if (score === best) out.push(fromIndex(key, m.size));
+  }
+  return out;
 }
 
 /**

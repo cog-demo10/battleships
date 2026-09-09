@@ -53,6 +53,22 @@ describe('memory', () => {
     assert.ok(m.target && m.target.hits.some((h) => toLabel(h) === 'D6'));
   });
 
+  test('ambiguous sink attribution rejects the run that would strand another hit', () => {
+    // Battleship E6-E9 (row E) and Destroyer F7-F8 touching below it. Hits so far:
+    // E8, F8, E9, E7; then F7 reports sunk(2). Both E7-F7 and F7-F8 are 2-runs, but
+    // E7-F7 would leave F8 uncoverable (F6, F9, D8, G8 are misses).
+    const m = withResults(createMemory(10, [4, 2]), [
+      ['F6', 'miss'], ['F9', 'miss'], ['D8', 'miss'], ['G8', 'miss'],
+      ['E8', 'hit'], ['F8', 'hit'], ['E9', 'hit'], ['E7', 'hit'], ['F7', { kind: 'sunk', size: 2 }],
+    ]);
+    assert.equal(m.cells[toIndex(fromLabel('F7'))], 'sunk');
+    assert.equal(m.cells[toIndex(fromLabel('F8'))], 'sunk');
+    assert.equal(m.cells[toIndex(fromLabel('E7'))], 'hit');
+    assert.deepEqual(unresolvedHits(m).map(toLabel).sort(), ['E7', 'E8', 'E9']);
+    const shots = labelsOfNextShots('hard', m);
+    for (const s of shots) assert.ok(['E6', 'E10'].includes(s), s);
+  });
+
   test('a hit off the target line is kept unresolved but does not corrupt the axis', () => {
     const m = withResults(createMemory(10, FLEET), [['D4', 'hit'], ['D5', 'hit'], ['G8', 'hit']]);
     assert.equal(m.target.axis, 'horizontal');

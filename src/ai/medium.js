@@ -1,7 +1,7 @@
 // Medium: checkerboard-parity hunt; on a hit, target the neighbours; once two
 // aligned hits fix the axis, extend along that axis only until the ship sinks.
 
-import { targetCandidates, unknownCells } from './memory.js';
+import { extensionCandidates, targetCandidates, unknownCells } from './memory.js';
 
 function pick(rng, list) {
   return list[Math.floor(rng() * list.length)];
@@ -24,6 +24,8 @@ export const medium = {
   chooseShot(memory, rng) {
     const candidates = targetCandidates(memory);
     if (candidates.length > 0) return pick(rng, candidates);
+    const leftovers = extensionCandidates(memory);
+    if (leftovers.length > 0) return pick(rng, leftovers);
     return pick(rng, huntCells(memory));
   },
 };
