@@ -1,7 +1,7 @@
 // Entry point: wires the game state machine to the DOM. Renders the snapshot,
 // dispatches actions, and contains no rules of its own.
 import { createGame } from '../game/game.js';
-import { randomSeed } from '../rng.js';
+import { readOptions } from './options.js';
 import { h } from './dom.js';
 import { handleGridKeys } from './grid.js';
 import { renderStartScreen } from './startScreen.js';
@@ -12,17 +12,7 @@ import { renderStatusBar } from './statusBar.js';
 import { renderMoveLog } from './moveLog.js';
 import { renderGameOver } from './gameOver.js';
 
-const params = new URLSearchParams(location.search);
-// ?seed=N replays an exact game; ?delay=ms shortens the pause before the computer fires.
-/** Parse a non-negative numeric query parameter; absent or malformed → fallback. */
-function numericParam(name, valid, fallback) {
-  const raw = params.get(name);
-  if (raw === null || raw.trim() === '') return fallback();
-  const n = Number(raw);
-  return valid(n) && n >= 0 ? n : fallback();
-}
-const seed = numericParam('seed', Number.isInteger, randomSeed);
-const AI_DELAY = numericParam('delay', Number.isFinite, () => 600);
+const { seed, delay: AI_DELAY } = readOptions(location.search);
 
 const game = createGame({ seed });
 const root = document.getElementById('app');
