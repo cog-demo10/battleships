@@ -24,8 +24,10 @@ const root = document.getElementById('app');
 let commit = 'dev';
 let hover = null;
 let aiTimer = null;
+let rendering = false;
 
 function setHover(coord) {
+  if (rendering) return;
   const before = hover ? `${hover.row},${hover.col}` : '';
   const after = coord ? `${coord.row},${coord.col}` : '';
   if (before === after) return;
@@ -42,6 +44,15 @@ function scheduleAi() {
 }
 
 function render() {
+  rendering = true;
+  try {
+    paint();
+  } finally {
+    rendering = false;
+  }
+}
+
+function paint() {
   const snap = game.snapshot();
   const active = document.activeElement;
   const focusKey = active instanceof HTMLElement ? (active.dataset.cell || active.dataset.testid) : null;
