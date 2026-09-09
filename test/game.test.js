@@ -282,6 +282,44 @@ describe('determinism', () => {
     assert.ok(Object.isFrozen(s));
   });
 
+  test('criterion 11b: revealedFleet is undefined in every non-finished state', () => {
+    const game = createGame({ seed: 1 });
+    assert.equal(game.snapshot().revealedFleet, undefined); // selecting
+    game.dispatch({ type: 'SELECT_DIFFICULTY', level: 'medium' });
+    assert.equal(game.snapshot().revealedFleet, undefined); // placing
+    game.dispatch({ type: 'RANDOMISE' });
+    game.dispatch({ type: 'START' });
+    while (game.snapshot().phase === 'playing') {
+      assert.equal(game.snapshot().revealedFleet, undefined); // playing, both turns
+      const s = game.snapshot();
+      if (s.turn === 'player') game.dispatch({ type: 'FIRE', coord: fromIndex(s.enemy.cells.indexOf('unknown')) });
+      else game.dispatch({ type: 'AI_FIRE' });
+    }
+    assert.notEqual(game.snapshot().revealedFleet, undefined);
+    game.dispatch({ type: 'PLAY_AGAIN' });
+    assert.equal(game.snapshot().revealedFleet, undefined);
+  });
+
+  test('criterion 11b: at game over revealedFleet is exactly the unsunk enemy ships, consistent with the view', () => {
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const s = playOut(placedGame(seed, 'hard'));
+      assert.equal(s.phase, 'finished');
+      assert.equal(s.revealedFleet.length, s.enemyRemaining);
+      if (s.winner === 'player') assert.deepEqual(s.revealedFleet, []);
+      const revealedCells = s.revealedFleet.flatMap((ship) => ship.cells);
+      for (const ship of s.revealedFleet) {
+        assert.equal(ship.cells.length, ship.length);
+        assert.ok(ship.cells.some((c) => s.enemy.cells[toIndex(c)] !== 'hit'), `${ship.name} revealed but fully hit`);
+      }
+      for (const c of revealedCells) {
+        assert.ok(['unknown', 'hit'].includes(s.enemy.cells[toIndex(c)]), 'a revealed ship never sits on a miss or a wreck');
+      }
+      const hitCells = s.enemy.cells.filter((c) => c === 'hit' || c === 'sunk').length;
+      const unknownRevealed = revealedCells.filter((c) => s.enemy.cells[toIndex(c)] === 'unknown').length;
+      assert.equal(hitCells + unknownRevealed, 17, 'revealed + hit cells account for the whole fleet');
+    }
+  });
+
   test('subscribe notifies on change only', () => {
     const game = placedGame(1);
     let n = 0;

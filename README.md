@@ -21,7 +21,9 @@ CSS and JavaScript. No framework, no build step, nothing to install to play.
    lists every shot. When a ship is sunk it is named.
 4. **Game over** – the first side to sink all five ships wins. The final screen
    shows the result, your shot count and accuracy, the game's *seed* and the
-   deployed build. *Play again* keeps the level and deals a new game; *Change
+   deployed build, and the target grid turns round: any enemy ships you never
+   found are drawn in place, outlined in yellow so they stand apart from the
+   ones you sank. *Play again* keeps the level and deals a new game; *Change
    difficulty* returns to the start screen.
 
 Everything works from the keyboard: Tab to a board, move with the arrow keys,
