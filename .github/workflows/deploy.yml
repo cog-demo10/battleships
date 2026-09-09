@@ -1,0 +1,78 @@
+# Deploys the repository root to GitHub Pages and stamps the short commit hash
+# into version.json, which the page footer and game-over screen display.
+#
+# Requires: Settings -> Pages -> Build and deployment -> Source = "GitHub Actions".
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: npm test
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r index.html styles.css src LICENSE README.md _site/
+          printf '{ "commit": "%s" }\n' "$(git rev-parse --short HEAD)" > _site/version.json
+          cat _site/version.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Deployed build carries this commit
+        run: |
+          url="${{ needs.deploy.outputs.page_url }}"
+          expected="$(git rev-parse --short HEAD)"
+          for i in $(seq 1 12); do
+            actual="$(curl -fsSL -H 'Cache-Control: no-cache' "${url}version.json" | sed -E 's/.*"commit": *"([^"]+)".*/\1/')" || true
+            [ "$actual" = "$expected" ] && break
+            sleep 10
+          done
+          echo "deployed=$actual expected=$expected"
+          [ "$actual" = "$expected" ]
+      - name: Browser smoke test against the live URL
+        run: npx playwright test --project=desktop e2e/access.spec.js e2e/game.spec.js -g "footer|loads without|complete game on hard"
+        env:
+          BASE_URL: ${{ needs.deploy.outputs.page_url }}
