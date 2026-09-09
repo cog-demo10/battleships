@@ -1,0 +1,17 @@
+{
+  "name": "battleships",
+  "version": "1.0.0",
+  "description": "Single-player Battleships in plain HTML, CSS and JavaScript",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test 'test/**/*.test.js'",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include='src/engine/**' --test-coverage-include='src/ai/**' --test-coverage-include='src/game/**' --test-coverage-include='src/rng.js' --test-coverage-lines=90 'test/**/*.test.js'",
+    "serve": "node e2e/serve.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
+  }
+}
