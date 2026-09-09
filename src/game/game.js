@@ -203,6 +203,12 @@ export function createGame({ seed, size = DEFAULT_SIZE, fleet = STANDARD_FLEET, 
     return changed;
   }
 
+  /** Whether the next ship could be placed at `coord` (for the placement preview). */
+  function canPlaceAt(coord) {
+    const spec = nextSpec();
+    return phase === 'placing' && !!spec && isValidPlacement(playerBoard, coord, orientation, spec.length);
+  }
+
   function snapshot() {
     const shots = log.filter((e) => e.by === 'player');
     const hits = shots.filter((e) => e.kind !== 'miss').length;
@@ -223,6 +229,7 @@ export function createGame({ seed, size = DEFAULT_SIZE, fleet = STANDARD_FLEET, 
         error: placementError,
         placedCount: playerBoard.ships.length,
         complete: playerBoard.ships.length === fleet.length,
+        canPlaceAt,
       },
       log,
       lastShot,
