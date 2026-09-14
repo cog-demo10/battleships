@@ -39,7 +39,7 @@ export function renderStartScreen(dispatch, { selectedAvatar, onAvatar, bestByLe
         AVATARS.map((id, i) => h('button', {
           type: 'button',
           'aria-label': `Avatar ${i + 1}`,
-          'aria-pressed': id === selectedAvatar,
+          'aria-pressed': id === selectedAvatar ? 'true' : 'false',
           onClick: () => onAvatar(id),
         }, [
           h('img', { src: avatarSrc(id), alt: '', 'aria-hidden': 'true', loading: 'lazy', width: '96', height: '96' }),
