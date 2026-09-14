@@ -42,9 +42,10 @@ export function loadBests() {
 /** Player wins only; best = fewest shots. Returns the (possibly updated) bests. */
 export function recordBest(bests, level, stats, winner) {
   if (winner !== 'player' || !level) return bests;
-  const cur = bests[level];
-  if (cur && cur.shots <= stats.shots) return bests;
-  const next = { ...bests, [level]: { shots: stats.shots, accuracy: stats.accuracy } };
+  const merged = { ...bests, ...loadBests() };
+  const cur = merged[level];
+  if (cur && cur.shots <= stats.shots) return merged;
+  const next = { ...merged, [level]: { shots: stats.shots, accuracy: stats.accuracy } };
   write(BEST_KEY, JSON.stringify(next));
   return next;
 }

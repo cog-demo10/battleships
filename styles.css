@@ -495,8 +495,11 @@ button[aria-pressed="true"] {
   .boards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .boards .side-target { order: 0; }
   .boards .side-fleet { order: 1; }
-  .board-side { flex-direction: row; align-items: flex-start; }
   .board-side .grid { --cell: clamp(18px, 2.7vw, 34px); }
+}
+
+@media (min-width: 900px) {
+  .board-side { flex-direction: row; align-items: flex-start; }
   .portrait { width: 96px; height: 96px; }
 }
 
