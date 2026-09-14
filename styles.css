@@ -138,16 +138,61 @@ button[aria-pressed="true"] {
 .muted { color: var(--muted); }
 
 /* Start screen */
-.start { max-width: 520px; margin: 1rem auto; text-align: center; }
+.start { display: flex; flex-direction: column; max-width: 520px; margin: 1rem auto; text-align: center; }
+.start .opponents { order: 3; }
+.start .avatars { order: 2; }
+.start .admiralty-wordmark {
+  order: 1;
+  margin: 0.25rem 0 1rem;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  color: var(--brass);
+  font-size: clamp(2rem, 9vw, 3.25rem);
+  letter-spacing: 0.2em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #000, 0 0 14px rgba(214, 178, 90, 0.25);
+}
 .start .levels { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
-.start .levels button { text-align: left; padding: 0.75rem 1rem; }
+.start .levels button {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
 .start .levels strong { display: block; }
-.start .levels small { color: var(--muted); }
+.card-text { min-width: 0; }
+.card-text small { display: block; color: var(--muted); }
+.card-text .best { color: #d9c98c; margin-top: 0.2rem; }
+.officer-portrait { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; }
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+.avatar-grid button { min-width: 0; padding: 0.25rem; }
+.avatar-grid img {
+  display: block;
+  width: 100%;
+  max-width: 96px;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+}
+.avatar-grid button[aria-pressed="true"] img { box-shadow: 0 0 0 3px var(--accent); }
 
 /* Boards */
 .boards { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+.board-side { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.side-fleet { flex-direction: column-reverse; }
 .board-wrap { display: flex; flex-direction: column; align-items: center; }
 .board-wrap h2 { align-self: stretch; }
+.portrait { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; }
 .grid {
   display: grid;
   grid-template-columns: auto repeat(10, var(--cell));
@@ -447,9 +492,12 @@ button[aria-pressed="true"] {
 }
 
 @media (min-width: 720px) {
-  .boards { grid-template-columns: 1fr 1fr; }
-  .boards .target { order: 0; }
-  .boards .fleet { order: 1; }
+  .boards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .boards .side-target { order: 0; }
+  .boards .side-fleet { order: 1; }
+  .board-side { flex-direction: row; align-items: flex-start; }
+  .board-side .grid { --cell: clamp(18px, 2.7vw, 34px); }
+  .portrait { width: 96px; height: 96px; }
 }
 
 /* 3D board tilt: decorative only, off on narrow layouts so the stacked
@@ -492,4 +540,9 @@ button[aria-pressed="true"] {
   .cell.sunk::before, .cell.sunk::after { animation: sunk-settle 400ms ease-out both; }
   .boards .board-wrap { transition: transform 240ms ease; }
   button { transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
+  .avatar-grid button[aria-pressed="true"] img { animation: avatar-pop 180ms ease-out; }
+  @keyframes avatar-pop {
+    0% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+  }
 }
