@@ -220,13 +220,17 @@ button[aria-pressed="true"] {
 }
 .cell.hit {
   background: radial-gradient(circle at 50% 50%, #ffd28a 0%, var(--hit) 45%, var(--hit-deep) 100%);
-  color: #1a0a00;
+  color: #fff7ed;
+  font-weight: 700;
+  text-shadow: 0 0 2px #000, 0 0 4px #000, 0 1px 0 #000;
   border-color: #7a2c00;
   box-shadow: inset 0 0 0 1px rgba(255, 210, 138, 0.5), 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 .cell.sunk {
   background: radial-gradient(circle at 50% 50%, #f87171 0%, var(--sunk) 45%, var(--sunk-deep) 100%);
   color: #fff;
+  font-weight: 700;
+  text-shadow: 0 0 2px #000, 0 1px 0 #000;
   border-color: #4a0808;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.6);
 }
@@ -267,7 +271,7 @@ button[aria-pressed="true"] {
 /* Hit: scorch burst */
 .cell.hit::before {
   background:
-    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.55) 0 14%, transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.35) 0 10%, transparent 24%),
     conic-gradient(from 0deg,
       rgba(0, 0, 0, 0.45) 0 8%, transparent 8% 20%,
       rgba(0, 0, 0, 0.4) 20% 28%, transparent 28% 42%,
