@@ -26,7 +26,14 @@ export function renderStartScreen(dispatch, { selectedAvatar, onAvatar, bestByLe
           }, [
             h('img', { class: 'officer-portrait', src, alt: '', 'aria-hidden': 'true', loading: 'lazy', width: '80', height: '80' }),
             h('span', { class: 'card-text' }, [
-              h('strong', { text: name }),
+              h('span', { class: 'name-row' }, [
+                h('strong', { text: name }),
+                h('span', {
+                  class: `badge level level-${level}`,
+                  'data-testid': `difficulty-${level}`,
+                  text: level[0].toUpperCase() + level.slice(1),
+                }),
+              ]),
               h('small', { text: blurb }),
               best ? h('small', { class: 'best', text: `Personal best against them: ${shots}` }) : null,
             ]),

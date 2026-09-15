@@ -233,6 +233,32 @@ describe('resets', () => {
     assert.equal(game.dispatch({ type: 'CHANGE_DIFFICULTY' }), false);
     assert.equal(game.dispatch({ type: 'UNKNOWN' }), false);
   });
+
+  test('GO_HOME returns to selecting from placing, playing and finished', () => {
+    const placing = createGame({ seed: 7, level: 'easy' });
+    assert.equal(placing.snapshot().phase, 'placing');
+    assert.equal(placing.dispatch({ type: 'GO_HOME' }), true);
+    assert.equal(placing.snapshot().phase, 'selecting');
+    assert.equal(placing.snapshot().level, null);
+    assert.equal(placing.ai, null);
+
+    const playing = placedGame(7, 'hard');
+    playing.dispatch({ type: 'FIRE', coord: fromLabel('A1') });
+    assert.equal(playing.dispatch({ type: 'GO_HOME' }), true);
+    assert.equal(playing.snapshot().phase, 'selecting');
+    assert.equal(playing.snapshot().log.length, 0);
+    assert.notEqual(playing.snapshot().seed, 7);
+
+    const finished = placedGame(7);
+    playOut(finished);
+    assert.equal(finished.dispatch({ type: 'GO_HOME' }), true);
+    assert.equal(finished.snapshot().phase, 'selecting');
+
+    // Already home: nothing to do.
+    assert.equal(finished.dispatch({ type: 'GO_HOME' }), false);
+    finished.dispatch({ type: 'SELECT_DIFFICULTY', level: 'medium' });
+    assert.equal(finished.snapshot().phase, 'placing');
+  });
 });
 
 describe('snapshot immutability', () => {

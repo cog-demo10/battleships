@@ -12,11 +12,25 @@ function describe(entry) {
   }
 }
 
-export function renderStatusBar(snap) {
+/** @param {(action: object) => void} dispatch */
+export function renderHomeButton(dispatch) {
+  return h('button', {
+    type: 'button',
+    class: 'home',
+    'data-testid': 'home',
+    'aria-label': 'Home: return to opponent selection',
+    text: 'Home',
+    onClick: () => dispatch({ type: 'GO_HOME' }),
+  });
+}
+
+/** @param {(action: object) => void} dispatch */
+export function renderStatusBar(snap, dispatch) {
   const turn = snap.phase === 'finished'
     ? 'Game over'
     : (snap.turn === 'player' ? 'Your turn' : 'Computer is firing…');
   return h('section', { class: 'panel status', 'data-testid': 'status' }, [
+    renderHomeButton(dispatch),
     h('span', { class: 'badge level', 'data-testid': 'level', text: `Level: ${snap.level}` }),
     h('span', { class: 'turn', 'data-testid': 'turn', role: 'status', text: turn }),
     h('span', { 'data-testid': 'remaining', text: `Enemy ships left: ${snap.enemyRemaining} · Yours: ${snap.playerRemaining}` }),

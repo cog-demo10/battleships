@@ -3,6 +3,7 @@
 //   selecting -> placing -> playing(playerTurn | aiTurn) -> finished
 //   finished -> placing   (PLAY_AGAIN: same level, new seed)
 //   finished -> selecting (CHANGE_DIFFICULTY)
+//   any      -> selecting (GO_HOME)
 //
 // All randomness comes from one rng seeded per game; seed + actions replays exactly.
 
@@ -39,7 +40,8 @@ import { createAi, LEVELS } from '../ai/index.js';
  *  | { type: 'FIRE', coord: Coord }
  *  | { type: 'AI_FIRE' }
  *  | { type: 'PLAY_AGAIN' }
- *  | { type: 'CHANGE_DIFFICULTY' }} Action
+ *  | { type: 'CHANGE_DIFFICULTY' }
+ *  | { type: 'GO_HOME' }} Action
  */
 
 /** Recursively freeze plain objects/arrays so snapshot consumers cannot mutate game state. */
@@ -196,6 +198,17 @@ export function createGame({ seed, size = DEFAULT_SIZE, fleet: fleetInput = STAN
         break;
       case 'CHANGE_DIFFICULTY':
         if (phase === 'finished') {
+          currentSeed = randomInt(rng, 4294967296);
+          rng = makeRng(currentSeed);
+          currentLevel = null;
+          ai = null;
+          enterPlacing();
+          phase = 'selecting';
+          changed = true;
+        }
+        break;
+      case 'GO_HOME':
+        if (phase !== 'selecting') {
           currentSeed = randomInt(rng, 4294967296);
           rng = makeRng(currentSeed);
           currentLevel = null;

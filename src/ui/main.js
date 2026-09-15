@@ -76,7 +76,7 @@ function paint() {
     children.push(renderPlacementScreen(snap, game.dispatch, { hover, setHover }));
   } else {
     if (snap.phase === 'finished') children.push(renderGameOver(snap, game.dispatch, commit));
-    children.push(renderStatusBar(snap));
+    children.push(renderStatusBar(snap, game.dispatch));
     const officer = officerFor(snap.level);
     children.push(h('div', { class: 'boards' }, [
       h('div', { class: 'board-side side-target' }, [
