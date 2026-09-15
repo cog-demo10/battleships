@@ -31,7 +31,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp -r index.html styles.css src LICENSE README.md _site/
+          cp -r index.html styles.css src assets LICENSE README.md _site/
           printf '{ "commit": "%s" }\n' "$(git rev-parse --short HEAD)" > _site/version.json
           cat _site/version.json
       - uses: actions/upload-pages-artifact@v3
