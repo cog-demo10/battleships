@@ -48,6 +48,12 @@ function scheduleAi() {
   }, AI_DELAY);
 }
 
+function cancelAi() {
+  if (aiTimer === null) return;
+  clearTimeout(aiTimer);
+  aiTimer = null;
+}
+
 function render() {
   rendering = true;
   try {
@@ -76,7 +82,7 @@ function paint() {
     children.push(renderPlacementScreen(snap, game.dispatch, { hover, setHover }));
   } else {
     if (snap.phase === 'finished') children.push(renderGameOver(snap, game.dispatch, commit));
-    children.push(renderStatusBar(snap));
+    children.push(renderStatusBar(snap, game.dispatch));
     const officer = officerFor(snap.level);
     children.push(h('div', { class: 'boards' }, [
       h('div', { class: 'board-side side-target' }, [
@@ -110,8 +116,9 @@ function paint() {
       ]),
     ]));
     children.push(renderMoveLog(snap));
-    if (snap.phase === 'playing' && snap.turn === 'ai') scheduleAi();
   }
+  if (snap.phase === 'playing' && snap.turn === 'ai') scheduleAi();
+  else cancelAi();
 
   root.replaceChildren(...children);
 

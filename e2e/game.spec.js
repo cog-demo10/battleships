@@ -148,6 +148,64 @@ test('criteria 12a, 12b: Play again resets the board on the same level; Change d
   game.assertNoErrors();
 });
 
+test('Home button: absent on the landing screen, returns to it from placement, play and game over', async ({ page }) => {
+  const game = await openGame(page, { seed: 5 });
+  await expect(page.getByTestId('home')).toHaveCount(0);
+
+  await page.getByTestId('level-medium').click();
+  await expect(page.getByTestId('placement-screen')).toBeVisible();
+  await page.getByTestId('home').click();
+  await expect(page.getByTestId('start-screen')).toBeVisible();
+  await expect(page.getByTestId('home')).toHaveCount(0);
+
+  await startGame(page, 'medium');
+  await unknownTargetCells(page).first().click();
+  await waitForPlayerTurn(page);
+  await expect(page.getByTestId('log-entry')).toHaveCount(2);
+  await expect(page.getByTestId('home')).toBeVisible();
+  await page.getByTestId('home').click();
+  await expect(page.getByTestId('start-screen')).toBeVisible();
+  await expect(page.getByTestId('home')).toHaveCount(0);
+
+  await startGame(page, 'easy');
+  await expect(page.getByTestId('log-entry')).toHaveCount(0);
+  await expect(page.getByTestId('level')).toHaveText('Level: easy');
+  await playToEnd(page);
+  await page.getByTestId('home').click();
+  await expect(page.getByTestId('start-screen')).toBeVisible();
+  game.assertNoErrors();
+});
+
+test('Home during the computer\'s pause cancels its pending shot', async ({ page }) => {
+  const game = await openGame(page, { seed: 5, delay: 1500 });
+  await startGame(page, 'easy');
+  await targetCell(page, 'A1').click();
+  await expect(page.getByTestId('turn')).toHaveText('Computer is firing…');
+  await page.getByTestId('home').click();
+  await expect(page.getByTestId('start-screen')).toBeVisible();
+
+  await startGame(page, 'easy');
+  await targetCell(page, 'B2').click();
+  // Well before the new game's own 1.5s pause, the old game's timer would have fired.
+  await page.waitForTimeout(800);
+  await expect(page.getByTestId('log-entry')).toHaveCount(1);
+  await expect(page.getByTestId('turn')).toHaveText('Computer is firing…');
+  await waitForPlayerTurn(page);
+  await expect(page.getByTestId('log-entry')).toHaveCount(2);
+  game.assertNoErrors();
+});
+
+test('landing officer cards show a colour-coded difficulty badge next to the name', async ({ page }) => {
+  const game = await openGame(page);
+  for (const [level, label] of [['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']]) {
+    const badge = page.getByTestId(`level-${level}`).getByTestId(`difficulty-${level}`);
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText(label);
+    await expect(badge).toHaveClass(new RegExp(`\\bbadge\\b.*\\blevel-${level}\\b`));
+  }
+  game.assertNoErrors();
+});
+
 test('criterion 16: target-board DOM before the first shot is byte-identical across seeds', async ({ page }) => {
   const html = [];
   for (const seed of [101, 202]) {

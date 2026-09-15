@@ -164,6 +164,11 @@ button[aria-pressed="true"] {
   padding: 0.75rem 1rem;
 }
 .start .levels strong { display: block; }
+.start .name-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.start .name-row .badge { flex: none; }
+.badge.level-easy { background: linear-gradient(180deg, #1f6b3f 0%, #155232 100%); border-color: #3fae6e; color: #d1fae5; }
+.badge.level-medium { background: linear-gradient(180deg, #8a5a12 0%, #6b4508 100%); border-color: #d99a2b; color: #fef3c7; }
+.badge.level-hard { background: linear-gradient(180deg, #8b1f1f 0%, #6b1414 100%); border-color: #e05252; color: #fee2e2; }
 .card-text { min-width: 0; }
 .card-text small { display: block; color: var(--muted); }
 .card-text .best { color: #d9c98c; margin-top: 0.2rem; }
@@ -382,6 +387,8 @@ button[aria-pressed="true"] {
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
 }
 .status .level { text-transform: capitalize; }
+.status .home { padding: 0.2rem 0.75rem; font-size: 0.85rem; border-radius: 999px; }
+.placement-controls .home { margin-left: auto; }
 .status > span:not(.badge):not(.turn) { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .badge {
   display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px;

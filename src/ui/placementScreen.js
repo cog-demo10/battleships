@@ -1,5 +1,6 @@
 import { h } from './dom.js';
 import { renderFleetBoard } from './fleetBoard.js';
+import { renderHomeButton } from './statusBar.js';
 
 /**
  * @param {ReturnType<import('../game/game.js').createGame>['snapshot']} snap
@@ -41,6 +42,7 @@ export function renderPlacementScreen(snap, dispatch, ui) {
           onClick: () => dispatch({ type: 'START' }),
           text: 'Start game',
         }),
+        renderHomeButton(dispatch),
       ]),
       h('ul', { class: 'fleet-list', 'aria-label': 'Ships' }, fleet.map((s, i) => h('li', {
         class: i < placement.placedCount ? 'placed' : (i === placement.placedCount ? 'current' : ''),
