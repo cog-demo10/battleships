@@ -48,6 +48,12 @@ function scheduleAi() {
   }, AI_DELAY);
 }
 
+function cancelAi() {
+  if (aiTimer === null) return;
+  clearTimeout(aiTimer);
+  aiTimer = null;
+}
+
 function render() {
   rendering = true;
   try {
@@ -110,8 +116,9 @@ function paint() {
       ]),
     ]));
     children.push(renderMoveLog(snap));
-    if (snap.phase === 'playing' && snap.turn === 'ai') scheduleAi();
   }
+  if (snap.phase === 'playing' && snap.turn === 'ai') scheduleAi();
+  else cancelAi();
 
   root.replaceChildren(...children);
 

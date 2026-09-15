@@ -176,6 +176,25 @@ test('Home button: absent on the landing screen, returns to it from placement, p
   game.assertNoErrors();
 });
 
+test('Home during the computer\'s pause cancels its pending shot', async ({ page }) => {
+  const game = await openGame(page, { seed: 5, delay: 1500 });
+  await startGame(page, 'easy');
+  await targetCell(page, 'A1').click();
+  await expect(page.getByTestId('turn')).toHaveText('Computer is firing…');
+  await page.getByTestId('home').click();
+  await expect(page.getByTestId('start-screen')).toBeVisible();
+
+  await startGame(page, 'easy');
+  await targetCell(page, 'B2').click();
+  // Well before the new game's own 1.5s pause, the old game's timer would have fired.
+  await page.waitForTimeout(800);
+  await expect(page.getByTestId('log-entry')).toHaveCount(1);
+  await expect(page.getByTestId('turn')).toHaveText('Computer is firing…');
+  await waitForPlayerTurn(page);
+  await expect(page.getByTestId('log-entry')).toHaveCount(2);
+  game.assertNoErrors();
+});
+
 test('landing officer cards show a colour-coded difficulty badge next to the name', async ({ page }) => {
   const game = await openGame(page);
   for (const [level, label] of [['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']]) {
