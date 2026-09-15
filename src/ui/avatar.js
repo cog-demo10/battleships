@@ -1,4 +1,4 @@
-export const AVATARS = ['01', '02', '03', '04', '05'];
+export const AVATARS = ['01', '02', '03', '04', '05', '06'];
 export const DEFAULT_AVATAR = '01';
 export const avatarSrc = (id) => `./assets/avatars/${id}.png`;
 const AVATAR_KEY = 'battleships.avatar';
