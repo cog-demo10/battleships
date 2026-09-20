@@ -54,6 +54,7 @@ open `?seed=12345` on the URL.
 ```
 index.html, styles.css      the page
 version.json                build stamp shown in the footer (written on deploy)
+bugs.md                     log of bugs found and fixed, compiled from the commit history
 src/
   rng.js                    the only place random numbers come from
   engine/                   the rules: grid coordinates, boards, ships, fleets
