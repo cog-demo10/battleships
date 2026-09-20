@@ -99,6 +99,21 @@ function paint() {
     children.push(renderStatusBar(snap, game.dispatch));
     const officer = officerFor(snap.level);
     children.push(h('div', { class: 'boards' }, [
+      h('div', { class: 'board-side side-fleet' }, [
+        renderFleetBoard({ board: snap.playerBoard, title: 'Your fleet', interactive: false }),
+        h('div', { class: 'player-corner' }, [
+          h('img', {
+            class: 'portrait avatar',
+            src: avatarSrc(selectedAvatar),
+            alt: '',
+            'aria-hidden': 'true',
+            loading: 'lazy',
+            width: '96',
+            height: '96',
+          }),
+          snap.phase === 'playing' ? renderSurrenderButton(game.dispatch) : null,
+        ]),
+      ]),
       h('div', { class: 'board-side side-target' }, [
         officer ? h('img', {
           class: 'portrait officer',
@@ -115,21 +130,6 @@ function paint() {
           enabled: snap.phase === 'playing' && snap.turn === 'player',
           onSelect: (coord) => game.dispatch({ type: 'FIRE', coord }),
         }),
-      ]),
-      h('div', { class: 'board-side side-fleet' }, [
-        renderFleetBoard({ board: snap.playerBoard, title: 'Your fleet', interactive: false }),
-        h('div', { class: 'player-corner' }, [
-          h('img', {
-            class: 'portrait avatar',
-            src: avatarSrc(selectedAvatar),
-            alt: '',
-            'aria-hidden': 'true',
-            loading: 'lazy',
-            width: '96',
-            height: '96',
-          }),
-          snap.phase === 'playing' ? renderSurrenderButton(game.dispatch) : null,
-        ]),
       ]),
     ]));
     children.push(renderMoveLog(snap));

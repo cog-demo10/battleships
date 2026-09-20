@@ -195,6 +195,8 @@ button[aria-pressed="true"] {
 .boards { display: grid; gap: 1rem; grid-template-columns: 1fr; }
 .board-side { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
 .side-fleet { flex-direction: column-reverse; }
+.boards .side-target { order: 0; }
+.boards .side-fleet { order: 1; }
 .board-wrap { display: flex; flex-direction: column; align-items: center; }
 .board-wrap h2 { align-self: stretch; }
 .portrait { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; }
@@ -506,7 +508,7 @@ button[aria-pressed="true"] {
 
 @media (min-width: 720px) {
   .boards { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .boards .side-target { order: 1; }
+  .boards .side-target { order: 0; }
   .boards .side-fleet { order: 0; }
   .board-side .grid { --cell: clamp(18px, 2.7vw, 34px); }
 }
