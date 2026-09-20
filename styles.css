@@ -198,6 +198,12 @@ button[aria-pressed="true"] {
 .board-wrap { display: flex; flex-direction: column; align-items: center; }
 .board-wrap h2 { align-self: stretch; }
 .portrait { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; }
+.player-corner { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex: none; }
+.surrender {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 0.15rem;
+  padding: 0.3rem 0.6rem; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.surrender img { width: 32px; height: 32px; }
 .grid {
   display: grid;
   grid-template-columns: auto repeat(10, var(--cell));
@@ -387,7 +393,7 @@ button[aria-pressed="true"] {
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
 }
 .status .level { text-transform: capitalize; }
-.status .home, .status .surrender { padding: 0.2rem 0.75rem; font-size: 0.85rem; border-radius: 999px; }
+.status .home { padding: 0.2rem 0.75rem; font-size: 0.85rem; border-radius: 999px; }
 .placement-controls .home { margin-left: auto; }
 .status > span:not(.badge):not(.turn) { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .badge {
