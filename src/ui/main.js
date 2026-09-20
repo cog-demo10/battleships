@@ -25,7 +25,7 @@ function renderSurrenderButton(dispatch) {
     onClick: () => dispatch({ type: 'SURRENDER' }),
   }, [
     h('img', { src: './assets/white-flag.svg', alt: '', 'aria-hidden': 'true', width: '32', height: '32' }),
-    h('span', { text: 'I Quit' }),
+    h('span', { text: 'Surrender' }),
   ]);
 }
 
