@@ -387,7 +387,7 @@ button[aria-pressed="true"] {
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
 }
 .status .level { text-transform: capitalize; }
-.status .home { padding: 0.2rem 0.75rem; font-size: 0.85rem; border-radius: 999px; }
+.status .home, .status .surrender { padding: 0.2rem 0.75rem; font-size: 0.85rem; border-radius: 999px; }
 .placement-controls .home { margin-left: auto; }
 .status > span:not(.badge):not(.turn) { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .badge {

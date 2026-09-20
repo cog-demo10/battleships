@@ -39,6 +39,7 @@ import { createAi, LEVELS } from '../ai/index.js';
  *  | { type: 'START' }
  *  | { type: 'FIRE', coord: Coord }
  *  | { type: 'AI_FIRE' }
+ *  | { type: 'SURRENDER' }
  *  | { type: 'PLAY_AGAIN' }
  *  | { type: 'CHANGE_DIFFICULTY' }
  *  | { type: 'GO_HOME' }} Action
@@ -187,6 +188,9 @@ export function createGame({ seed, size = DEFAULT_SIZE, fleet: fleetInput = STAN
         break;
       case 'AI_FIRE':
         changed = phase === 'playing' && turn === 'ai' && aiFire();
+        break;
+      case 'SURRENDER':
+        if (phase === 'playing') { phase = 'finished'; winner = 'ai'; turn = null; changed = true; }
         break;
       case 'PLAY_AGAIN':
         if (phase === 'finished') {

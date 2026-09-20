@@ -176,6 +176,33 @@ test('Home button: absent on the landing screen, returns to it from placement, p
   game.assertNoErrors();
 });
 
+test('Surrender button: only shown during play, forfeits the game as a loss', async ({ page }) => {
+  const game = await openGame(page, { seed: 5 });
+  await expect(page.getByTestId('surrender')).toHaveCount(0);
+
+  await page.getByTestId('level-medium').click();
+  await expect(page.getByTestId('placement-screen')).toBeVisible();
+  await expect(page.getByTestId('surrender')).toHaveCount(0);
+  await page.getByTestId('home').click();
+
+  await startGame(page, 'medium');
+  await unknownTargetCells(page).first().click();
+  await waitForPlayerTurn(page);
+  await expect(page.getByTestId('surrender')).toBeVisible();
+  await page.getByTestId('surrender').click();
+  await expect(page.getByTestId('game-over')).toBeVisible();
+  await expect(page.getByTestId('result')).toHaveText('You lose');
+  await expect(page.getByTestId('turn')).toHaveText('Game over');
+  await expect(page.getByTestId('surrender')).toHaveCount(0);
+  await expect(page.getByTestId('play-again')).toBeVisible();
+  await expect(page.getByTestId('change-difficulty')).toBeVisible();
+
+  await page.getByTestId('play-again').click();
+  await expect(page.getByTestId('placement-screen')).toBeVisible();
+  await expect(page.getByTestId('surrender')).toHaveCount(0);
+  game.assertNoErrors();
+});
+
 test('Home during the computer\'s pause cancels its pending shot', async ({ page }) => {
   const game = await openGame(page, { seed: 5, delay: 1500 });
   await startGame(page, 'easy');

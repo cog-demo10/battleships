@@ -25,12 +25,25 @@ export function renderHomeButton(dispatch) {
 }
 
 /** @param {(action: object) => void} dispatch */
+export function renderSurrenderButton(dispatch) {
+  return h('button', {
+    type: 'button',
+    class: 'surrender',
+    'data-testid': 'surrender',
+    'aria-label': 'Surrender: forfeit this game',
+    text: 'White flag',
+    onClick: () => dispatch({ type: 'SURRENDER' }),
+  });
+}
+
+/** @param {(action: object) => void} dispatch */
 export function renderStatusBar(snap, dispatch) {
   const turn = snap.phase === 'finished'
     ? 'Game over'
     : (snap.turn === 'player' ? 'Your turn' : 'Computer is firing…');
   return h('section', { class: 'panel status', 'data-testid': 'status' }, [
     renderHomeButton(dispatch),
+    snap.phase === 'playing' ? renderSurrenderButton(dispatch) : null,
     h('span', { class: 'badge level', 'data-testid': 'level', text: `Level: ${snap.level}` }),
     h('span', { class: 'turn', 'data-testid': 'turn', role: 'status', text: turn }),
     h('span', { 'data-testid': 'remaining', text: `Enemy ships left: ${snap.enemyRemaining} · Yours: ${snap.playerRemaining}` }),
