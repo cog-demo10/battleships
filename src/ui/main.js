@@ -15,6 +15,20 @@ import { renderGameOver } from './gameOver.js';
 
 const { seed, delay: AI_DELAY } = readOptions(location.search);
 
+/** @param {(action: object) => void} dispatch */
+function renderSurrenderButton(dispatch) {
+  return h('button', {
+    type: 'button',
+    class: 'surrender',
+    'data-testid': 'surrender',
+    'aria-label': 'Surrender: forfeit this game',
+    onClick: () => dispatch({ type: 'SURRENDER' }),
+  }, [
+    h('img', { src: './assets/white-flag.svg', alt: '', 'aria-hidden': 'true', width: '32', height: '32' }),
+    h('span', { text: 'I Quit' }),
+  ]);
+}
+
 const game = createGame({ seed });
 const root = document.getElementById('app');
 let commit = 'dev';
@@ -104,15 +118,18 @@ function paint() {
       ]),
       h('div', { class: 'board-side side-fleet' }, [
         renderFleetBoard({ board: snap.playerBoard, title: 'Your fleet', interactive: false }),
-        h('img', {
-          class: 'portrait avatar',
-          src: avatarSrc(selectedAvatar),
-          alt: '',
-          'aria-hidden': 'true',
-          loading: 'lazy',
-          width: '96',
-          height: '96',
-        }),
+        h('div', { class: 'player-corner' }, [
+          h('img', {
+            class: 'portrait avatar',
+            src: avatarSrc(selectedAvatar),
+            alt: '',
+            'aria-hidden': 'true',
+            loading: 'lazy',
+            width: '96',
+            height: '96',
+          }),
+          snap.phase === 'playing' ? renderSurrenderButton(game.dispatch) : null,
+        ]),
       ]),
     ]));
     children.push(renderMoveLog(snap));
