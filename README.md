@@ -1,6 +1,6 @@
-# Battleships
+# Battleship: The Admiralty
 
-A single-player Battleships game against the computer, written in plain HTML,
+A single-player Battleship: The Admiralty game against the computer, written in plain HTML,
 CSS and JavaScript. No framework, no build step, nothing to install to play.
 
 **Play it:** https://cog-demo10.github.io/battleships/
