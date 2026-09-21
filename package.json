@@ -1,7 +1,7 @@
 {
-  "name": "battleships",
+  "name": "battleship-the-admiralty",
   "version": "1.0.0",
-  "description": "Single-player Battleships in plain HTML, CSS and JavaScript",
+  "description": "Single-player Battleship: The Admiralty in plain HTML, CSS and JavaScript",
   "type": "module",
   "private": true,
   "license": "MIT",

@@ -64,6 +64,6 @@ test('page loads without console errors and shows the start screen', async ({ pa
   const started = Date.now();
   const game = await openGame(page);
   expect(Date.now() - started).toBeLessThan(3000);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Battleships');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Battleship: The Admiralty');
   game.assertNoErrors();
 });
